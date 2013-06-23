@@ -32,7 +32,8 @@ if [ "$1" = "eabi" ]; then
         --with-cloog-version=$CLOOG_VERSION \
         --with-ppl-version=$PPL_VERSION \
         --with-isl-version=$ISL_VERSION \
-        --enable-graphite
+        --enable-graphite \
+        --enable-gold=default
 
     make -j6 build && make install
 
@@ -54,6 +55,7 @@ elif [ "$1" = "androideabi" ]; then
         --with-ppl-version=$PPL_VERSION \
         --with-isl-version=$ISL_VERSION \
         --enable-graphite \
+        --enable-gold=default \
         --with-sysroot=$SYSROOT
 
     make -j6 build && make install
