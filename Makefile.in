@@ -303,7 +303,7 @@ config-target-binutils: stmp-config-target-binutils
 # We do not want to enable shared libraries in binutils
 BINUTILS_CONFIG_ARGS=--prefix=$(prefix) \
 	--target=${cur_target} --host=${cur_host} --build=${cur_build} \
-	$(baseargs) --disable-shared --disable-nls
+	$(baseargs) --disable-shared --disable-nls --disable-werror
 ifeq ($(ENABLE_GRAPHITE),yes)
 BINUTILS_CONFIG_ARGS+= --with-cloog=${CLOOG_DIR} --with-isl=${ISL_DIR} --with-isl=${ISL_DIR} --with-gmp=${GMP_DIR} \
 	--disable-ppl-version-check --disable-cloog-version-check --disable-isl-version-check $(CLOOG_BACKEND)
@@ -397,7 +397,8 @@ config-host-libbfd: stmp-config-host-libbfd
 LIBBFD_CONFIG_ARGS=--prefix=$(prefix) \
 	--target=${target_alias} --host=${host} --build=${build} \
 	$(host_baseargs) --disable-shared \
-	--enable-install-libbfd --with-included-gettext
+	--enable-install-libbfd --with-included-gettext \
+	--disable-werror
 stmp-config-host-libbfd: config.status
 	([ -d libbfd-${BINUTILS_VERSION} ] || \
 	  mkdir libbfd-${BINUTILS_VERSION}) && \
@@ -821,7 +822,7 @@ config-target-gdb: stmp-config-target-gdb
 
 GDB_CONFIG_ARGS=$(host_baseargs) --prefix=$(prefix) \
 	--target=$(GDB_TARGET) --host=${cur_host} --build=${cur_build} \
-	$(WITH_PYTHON) --disable-nls
+	$(WITH_PYTHON) --disable-nls --disable-werror
 
 # For gdb versions 7.2 and higher, expat is required.
 ifeq ($(GDB_MIN_VERSION_7_2),yes)
