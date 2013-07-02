@@ -33,7 +33,8 @@ if [ "$1" = "eabi" ]; then
         --with-ppl-version=$PPL_VERSION \
         --with-isl-version=$ISL_VERSION \
         --enable-graphite \
-        --enable-gold=default
+        --enable-gold=default \
+        --disable-docs
 
     make -j6 build && make install
 
@@ -56,7 +57,8 @@ elif [ "$1" = "androideabi" ]; then
         --with-isl-version=$ISL_VERSION \
         --enable-graphite \
         --enable-gold=default \
-        --with-sysroot=$SYSROOT
+        --with-sysroot=$SYSROOT \
+        --disable-docs
 
     make -j6 build && make install
 else
