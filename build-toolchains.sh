@@ -35,7 +35,6 @@ if [ "$1" = "eabi" ]; then
         --target=arm-eabi \
         --enable-graphite=yes \
         --enable-gold=yes \
-        --enable-plugins \
         --disable-docs
 
     make $SMP && make install
@@ -61,7 +60,6 @@ elif [ "$1" = "androideabi" ]; then
         --target=arm-linux-androideabi \
         --enable-graphite=yes \
         --enable-gold=yes \
-        --enable-plugins \
         --disable-docs
 
     make $SMP && make install
