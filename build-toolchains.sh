@@ -4,7 +4,7 @@ export TARGET_CXXFLAGS="$CXXFLAGS -O2 -march=armv7-a -mtune=cortex-a9 -frtti"
 PREFIX="/home/mustaavalkosta/pizzabean/prebuilts/gcc/linux-x86/arm"
 GCC_VERSION_NUMBER="4.8"
 GCC_VERSION="4.8"
-BINUTILS_VERSION="2.23.2"
+BINUTILS_VERSION="upstream"
 GMP_VERSION="5.1.2"
 MPFR_VERSION="3.1.2"
 MPC_VERSION="1.0.1"
@@ -34,7 +34,6 @@ if [ "$1" = "eabi" ]; then
         --with-tune=cortex-a9 \
         --target=arm-eabi \
         --enable-graphite=yes \
-        --enable-gold=yes \
         --enable-plugins \
         --disable-libsanitizer \
         --disable-docs
@@ -61,7 +60,6 @@ elif [ "$1" = "androideabi" ]; then
         --with-sysroot="$SYSROOT" \
         --target=arm-linux-androideabi \
         --enable-graphite=yes \
-        --enable-gold=yes \
         --enable-plugins \
         --disable-libsanitizer \
         --disable-docs
