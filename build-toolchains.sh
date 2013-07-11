@@ -36,7 +36,6 @@ if [ "$1" = "eabi" ]; then
         --enable-graphite=yes \
         --enable-gold=yes \
         --enable-plugins \
-        --disable-libsanitizer \
         --disable-docs
 
     make $SMP && make install
@@ -63,7 +62,6 @@ elif [ "$1" = "androideabi" ]; then
         --enable-graphite=yes \
         --enable-gold=yes \
         --enable-plugins \
-        --disable-libsanitizer \
         --disable-docs
 
     make $SMP && make install
