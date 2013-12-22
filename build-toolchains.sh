@@ -1,7 +1,7 @@
 #!/bin/bash
 export TARGET_CFLAGS="$CFLAGS -O2 -march=armv7-a -mtune=cortex-a9"
 export TARGET_CXXFLAGS="$CXXFLAGS -O2 -march=armv7-a -mtune=cortex-a9 -frtti"
-PREFIX="/home/mustaavalkosta/pizzabean/prebuilts/gcc/linux-x86/arm"
+PREFIX="/home/mustaavalkosta/storage"
 GCC_VERSION_NUMBER="4.8"
 GCC_VERSION="4.8"
 BINUTILS_VERSION="2.24"
