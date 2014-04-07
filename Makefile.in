@@ -95,6 +95,7 @@ HAVE_EXPAT=@have_expat@
 ENABLE_GOLD=@enable_gold@
 ENABLE_LD_DEFAULT=@enable_ld_default@
 STAMP=touch
+MAKEFLAGS+=-j$(NUM_JOBS)
 
 TARGET_BINUTILS_BUILDDIR=$(abs_builddir)/$(BINUTILS_VERSION)
 TARGET_GCC_BUILDDIR=$(abs_builddir)/$(GCC_VERSION)
@@ -236,10 +237,10 @@ all: build
 ifeq ($(ENABLE_GRAPHITE),yes)
 build: install-host-cloog
 endif
-build: build-target-binutils build-host-libbfd build-target-gcc \
+build: build-target-binutils build-target-gcc \
 	build-target-gdb
 
-install: install-target-binutils install-host-libbfd install-target-gcc \
+install: install-target-binutils install-target-gcc \
 	install-target-gdb
 
 # To support canadian cross build we need to build build->target toolchain
@@ -254,7 +255,7 @@ stmp-config-canadian-tools:
 	($(canadian_build_env) \
 	 cd $(CANADIAN_ROOT) && \
 	 $(abs_srcdir)/configure $(baseargs) --with-gdb-version=none --build=$(cur_build) \
-		--host=$(cur_build) --target=$(cur_target))  && \
+		--host=$(cur_build) --target=$(cur_target) --prefix=$(CANADIAN_ROOT)/install) && \
 	$(STAMP) $@
 
 build-canadian-tools: stmp-build-canadian-tools
@@ -268,7 +269,7 @@ install-canadian-tools: stmp-install-canadian-tools
 stmp-install-canadian-tools: stmp-build-canadian-tools
 	($(canadian_build_env) \
 	 cd $(CANADIAN_ROOT) && \
-	 $(MAKE) -j1 install prefix=$(CANADIAN_ROOT)/install) && \
+	 $(MAKE) -j1 install) && \
 	$(STAMP) $@
 
 # When building canadian cross toolchain we cannot build GCC target libraries.
@@ -313,7 +314,8 @@ ifneq ($(host_os),darwin)
 BINUTILS_CONFIG_ARGS+= \
 	'--with-host-libstdcxx=-static-libgcc \
 	 -Wl,-Bstatic,-lstdc++,-Bdynamic -lm' \
-	 --with-gold-ldflags='-static-libgcc -static-libstdc++'
+	 --with-gold-ldflags='-static-libgcc -static-libstdc++' \
+         --enable-install-libbfd
 else
 # In darwin ld doesn't allow both -static and -dynamic.  Instead, we rely on explicit
 # "-isysroot $(mac_sdk_root) -mmacosx-version-min=$(mac_sdk_version)" to establish
@@ -389,42 +391,6 @@ install-target-gold: stmp-build-target-gold install-target-binutils
 
 endif
 
-# build libbfd for host.  We configure with all targets, so this is built
-# separately from the same source.
-# Required by Android build, we always build 32bit host libraries, and
-# put the 32bit host libraries into /lib32.
-.PHONY: config-host-libbfd build-host-libbfd install-host-libbfd
-config-host-libbfd: stmp-config-host-libbfd
-LIBBFD_CONFIG_ARGS=--prefix=$(prefix) \
-	--target=${target_alias} --host=${host} --build=${build} \
-	$(host_baseargs) --disable-shared \
-	--enable-install-libbfd --with-included-gettext \
-	--disable-werror
-stmp-config-host-libbfd: config.status
-	([ -d libbfd-${BINUTILS_VERSION} ] || \
-	  mkdir libbfd-${BINUTILS_VERSION}) && \
-	(cd libbfd-${BINUTILS_VERSION} ; \
-	 export CFLAGS="$(CFLAGS) -m32" ; \
-	 $(call find-package-srcdir, ${BINUTILS_VERSION})/configure \
-	  $(LIBBFD_CONFIG_ARGS)) && \
-	$(STAMP) $@
-build-host-libbfd: stmp-build-host-libbfd
-stmp-build-host-libbfd: stmp-config-host-libbfd
-	$(MAKE) -C libbfd-${BINUTILS_VERSION} all-bfd all-libiberty && \
-	$(MAKE) -C libbfd-${BINUTILS_VERSION}/intl libintl.a && \
-	$(STAMP) $@
-# Also include libintl.a.  We have to do this manully since the
-# source of libintl in binutils is modified to not install the library.
-# We build with -m32 always, and install host libs into /lib32.
-LIB32DIR=$(libdir)32
-install-host-libbfd: stmp-build-host-libbfd install-target-binutils
-	$(MAKE) -C libbfd-${BINUTILS_VERSION}/bfd install \
-		bfdlibdir=$(LIB32DIR) bfdincludedir=$(includedir) && \
-	$(INSTALL_DATA) libbfd-${BINUTILS_VERSION}/intl/libintl.a \
-		$(LIB32DIR) && \
-	$(INSTALL_DATA) libbfd-${BINUTILS_VERSION}/libiberty/libiberty.a \
-		$(LIB32DIR)
-
 # target gcc rules
 .PHONY: config-target-gcc build-target-gcc install-target-gcc
 .PHONY: install-target-gcc-gcc $(install-target-gcc-multilibs)
@@ -484,11 +450,11 @@ GCC_CONFIG_ARGS += $(GCC_CONFIG_LIBSTDCXX_V3) --disable-libssp \
 CFLAGS_FOR_TARGET += -DTARGET_POSIX_IO -fno-short-enums
 
 ifeq ($(target_cpu),i686)
-GCC_CONFIG_ARGS += --with-arch=i686 --with-tune=atom --with-fpmath=sse
+GCC_CONFIG_ARGS += --with-arch=i686 --with-tune=intel --with-fpmath=sse
 endif
 
 ifeq ($(target_cpu),x86_64)
-GCC_CONFIG_ARGS += --with-arch=x86-64 --with-tune=atom --with-fpmath=sse \
+GCC_CONFIG_ARGS += --with-arch=x86-64 --with-tune=intel --with-fpmath=sse \
                    --with-multilib-list=m32,m64,mx32
 endif
 
@@ -526,7 +492,7 @@ stmp-config-target-gcc: config.status stmp-install-host-ppl stmp-install-host-is
 	   $(GCC_CONFIG_ARGS)) && \
 	$(STAMP) $@
 build-target-gcc: stmp-build-target-gcc
-stmp-build-target-gcc: stmp-config-target-gcc
+stmp-build-target-gcc: stmp-config-target-gcc install-target-binutils
 	($(canadian_env) \
 	 $(MAKE) -C ${GCC_VERSION} \
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
@@ -842,7 +808,7 @@ stmp-config-target-gdb: config.status $(canadian_stmp)
 	  $(GDB_CONFIG_ARGS)) && \
 	$(STAMP) $@
 build-target-gdb: stmp-build-target-gdb
-stmp-build-target-gdb: stmp-config-target-gdb
+stmp-build-target-gdb: stmp-config-target-gdb install-target-binutils
 	($(canadian_env) \
 	 $(MAKE) -C ${GDB_VERSION}) && $(STAMP) $@
 install-target-gdb: stmp-build-target-gdb
